@@ -122,9 +122,13 @@ class SnakeGame(QGraphicsView):
         self.scene().clear()
         for segment in self.snake:
             x, y = segment
-            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+            # Snake segments are green
+            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                                 QPen(Qt.black), QBrush(Qt.green))
         fx, fy = self.food
-        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+        # Food is red
+        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                             QPen(Qt.black), QBrush(Qt.red))
 
     def spawn_food(self):
         while True:
