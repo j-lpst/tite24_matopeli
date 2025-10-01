@@ -44,6 +44,7 @@ class SnakeGame(QGraphicsView):
             self.game_started = True
             self.scene().clear()
             self.start_game()
+            self.score = 0
             return
 
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
@@ -80,6 +81,7 @@ class SnakeGame(QGraphicsView):
             self.snake.insert(0, new_head)
             self.eat_sound.play()  # Syömisääni
             self.food = self.spawn_food()
+            self.score += 1
         else:
             self.snake.insert(0, new_head)
             self.snake.pop()
@@ -99,6 +101,7 @@ class SnakeGame(QGraphicsView):
             self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
         fx, fy = self.food
         self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+        self.scene().addText(f"Score: {self.score}", QFont("Arial", 12))
 
     def spawn_food(self):
         while True:
