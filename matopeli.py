@@ -43,10 +43,11 @@ class SnakeGame(QGraphicsView):
 
         # If waiting for restart after game over
         if hasattr(self, 'awaiting_restart') and self.awaiting_restart:
-        # Ignore arrow keys for restart
+            # Ignore arrow keys for restart
             if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
                 self.awaiting_restart = False
                 self.game_started = True
+                self.gameover_sound.stop()  # Stop the game over sound when restarting
                 self.scene().clear()
                 self.start_game()
             return
