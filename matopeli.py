@@ -20,11 +20,27 @@ class SnakeGame(QGraphicsView):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
-        
-        self.start_game()
+
+        # starting game by button
+        self.game_started = False
+        self.init_screen()
+
+    def init_screen(self):
+        start_text = self.scene().addText("Press any key to start", QFont("Arial", 18))
+        text_width = start_text.boundingRect().width()
+        text_x = (self.width() - text_width) / 5
+        start_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
 
     def keyPressEvent(self, event):
         key = event.key()
+
+        # starting game by button
+        if not self.game_started:
+            self.game_started = True
+            self.scene().clear()
+            self.start_game()
+            return
+
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
             # päivitetään suunta vain jos se ei ole vastakkainen valitulle suunnalle
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
@@ -39,7 +55,6 @@ class SnakeGame(QGraphicsView):
     def update_game(self):
         head_x, head_y = self.snake[0]
 
-
         if self.direction == Qt.Key_Left:
             new_head = (head_x - 1, head_y)
         elif self.direction == Qt.Key_Right:
@@ -52,46 +67,25 @@ class SnakeGame(QGraphicsView):
         # board limits
         if new_head in self.snake or not (0 <= new_head[0] < GRID_WIDTH) or not (0 <= new_head[1] < GRID_HEIGHT):
             self.timer.stop()
-            self.game_over()
             return
 
         self.snake.insert(0, new_head)
-        
         self.snake.pop()
 
         self.print_game()
-
-    def game_over(self):
-        # Game over text
-        game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
-        text_width = game_over_text.boundingRect().width()
-        text_x = (self.width() - text_width) / 2
-        game_over_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
 
     def print_game(self):
         self.scene().clear()
 
         for segment in self.snake:
             x, y = segment
-            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
-        fx, fy = self.food
-        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
-    
-        
-    def spawn_food(self):
-        while True:
-            x = random.randint(0, GRID_WIDTH - 1)
-            y = random.randint(0, GRID_HEIGHT - 1)
-            if (x, y) not in self.snake:
-                return x, y
-    
-
+            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                                 QPen(Qt.black), QBrush(Qt.black))
         
     def start_game(self):
         self.direction = Qt.Key_Right
         self.snake = [(5, 5), (5, 6), (5, 7)]
         self.timer.start(300)
-        self.food = self.spawn_food()
 
 def main():
     app = QApplication(sys.argv)
