@@ -19,6 +19,7 @@ class SnakeGame(QGraphicsView):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
+        self.timer_delay = 300  # Initial delay in ms
 
         # Äänet
         self.eat_sound = QSoundEffect()
@@ -102,6 +103,9 @@ class SnakeGame(QGraphicsView):
             self.eat_sound.play()  # Syömisääni
             self.food = self.spawn_food()
             self.score += 1
+            # Speed up the snake a little (minimum delay 60ms)
+            self.timer_delay = max(60, int(self.timer_delay * 0.93))
+            self.timer.start(self.timer_delay)
         else:
             self.snake.insert(0, new_head)
             self.snake.pop()
@@ -150,12 +154,10 @@ class SnakeGame(QGraphicsView):
     def start_game(self):
         self.direction = Qt.Key_Right
         self.snake = [(5, 5), (5, 6), (5, 7)]
-        self.timer.start(300)
         self.food = self.spawn_food()
         # for levels
         self.level_limit = 5
         self.timer_delay = 300
-
         self.timer.start(self.timer_delay)
 
 def main():
