@@ -40,12 +40,31 @@ class SnakeGame(QGraphicsView):
 
     def keyPressEvent(self, event):
         key = event.key()
+
+        # If waiting for restart after game over
+        if hasattr(self, 'awaiting_restart') and self.awaiting_restart:
+        # Ignore arrow keys for restart
+            if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+                self.awaiting_restart = False
+                self.game_started = True
+                self.scene().clear()
+                self.start_game()
+            return
+
+        # starting game by button
         if not self.game_started:
             self.game_started = True
             self.scene().clear()
             self.start_game()
             self.score = 0
             return
+
+        if not self.game_started:
+            self.game_started = True
+            self.scene().clear()
+            self.start_game()
+            return
+        
 
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
@@ -92,16 +111,34 @@ class SnakeGame(QGraphicsView):
         game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
-        game_over_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
+        text_y = GRID_HEIGHT * CELL_SIZE / 2
+        game_over_text.setPos(text_x, text_y)
+
+        # Add more vertical space between the two texts
+        restart_text = self.scene().addText("Press any key to start new game", QFont("Arial", 16))
+        restart_width = restart_text.boundingRect().width()
+        restart_x = (self.width() - restart_width) / 2
+        restart_y = text_y + game_over_text.boundingRect().height() + 16  # 16px extra space
+        restart_text.setPos(restart_x, restart_y)
+
+        self.awaiting_restart = True
 
     def print_game(self):
         self.scene().clear()
         for segment in self.snake:
             x, y = segment
-            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+            # Snake segments are green
+            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                                 QPen(Qt.black), QBrush(Qt.green))
         fx, fy = self.food
+<<<<<<< HEAD
         self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
         self.scene().addText(f"Score: {self.score}", QFont("Arial", 12))
+=======
+        # Food is red
+        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                             QPen(Qt.black), QBrush(Qt.red))
+>>>>>>> f5dc77e6a87d68e17f6505d9c2a0b3e6a312ecbb
 
     def spawn_food(self):
         while True:
@@ -117,6 +154,11 @@ class SnakeGame(QGraphicsView):
         self.snake = [(5, 5), (5, 6), (5, 7)]
         self.timer.start(300)
         self.food = self.spawn_food()
+        # for levels
+        self.level_limit = 5
+        self.timer_delay = 300
+
+        self.timer.start(self.timer_delay)
 
 def main():
     app = QApplication(sys.argv)
