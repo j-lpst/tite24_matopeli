@@ -40,11 +40,30 @@ class SnakeGame(QGraphicsView):
 
     def keyPressEvent(self, event):
         key = event.key()
+
+        # If waiting for restart after game over
+        if hasattr(self, 'awaiting_restart') and self.awaiting_restart:
+        # Ignore arrow keys for restart
+            if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+                self.awaiting_restart = False
+                self.game_started = True
+                self.scene().clear()
+                self.start_game()
+            return
+
+        # starting game by button
         if not self.game_started:
             self.game_started = True
             self.scene().clear()
             self.start_game()
             return
+
+        if not self.game_started:
+            self.game_started = True
+            self.scene().clear()
+            self.start_game()
+            return
+        
 
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
@@ -91,6 +110,13 @@ class SnakeGame(QGraphicsView):
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
         game_over_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
+
+        restart_text = self.scene().addText("Press any key to start new game", QFont("Arial", 16))
+        restart_width = restart_text.boundingRect().width()
+        restart_x = (self.width() - restart_width) / 2
+        restart_text.setPos(restart_x, GRID_HEIGHT * CELL_SIZE / 2 + 10)
+
+        self.awaiting_restart = True
 
     def print_game(self):
         self.scene().clear()
