@@ -1,11 +1,10 @@
-# 'pip install PySide6' tarvitaan 
 import sys
 import random
 from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QMenu
 from PySide6.QtGui import QPainter, QPen, QBrush, QFont
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtMultimedia import QSoundEffect
 
-# vakiot
 CELL_SIZE = 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 15
@@ -21,7 +20,15 @@ class SnakeGame(QGraphicsView):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
 
-        # starting game by button
+        # Äänet
+        self.eat_sound = QSoundEffect()
+        self.eat_sound.setSource(QUrl.fromLocalFile("eat.wav"))
+        self.eat_sound.setVolume(0.5)
+
+        self.gameover_sound = QSoundEffect()
+        self.gameover_sound.setSource(QUrl.fromLocalFile("gameover.wav"))
+        self.gameover_sound.setVolume(0.5)
+
         self.game_started = False
         self.init_screen()
 
@@ -33,8 +40,6 @@ class SnakeGame(QGraphicsView):
 
     def keyPressEvent(self, event):
         key = event.key()
-
-        # starting game by button
         if not self.game_started:
             self.game_started = True
             self.scene().clear()
@@ -42,7 +47,6 @@ class SnakeGame(QGraphicsView):
             return
 
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
-            # päivitetään suunta vain jos se ei ole vastakkainen valitulle suunnalle
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
                 self.direction = key
             elif key == Qt.Key_Right and self.direction != Qt.Key_Left:
@@ -67,17 +71,22 @@ class SnakeGame(QGraphicsView):
         # board limits
         if new_head in self.snake or not (0 <= new_head[0] < GRID_WIDTH) or not (0 <= new_head[1] < GRID_HEIGHT):
             self.timer.stop()
+            self.gameover_sound.play()  # Game Over ääni
             self.game_over()
             return
 
-        self.snake.insert(0, new_head)
-        self.snake.pop()
+        # syöminen
+        if new_head == self.food:
+            self.snake.insert(0, new_head)
+            self.eat_sound.play()  # Syömisääni
+            self.food = self.spawn_food()
+        else:
+            self.snake.insert(0, new_head)
+            self.snake.pop()
 
         self.print_game()
 
-
     def game_over(self):
-        # Game over text
         game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
@@ -85,7 +94,6 @@ class SnakeGame(QGraphicsView):
 
     def print_game(self):
         self.scene().clear()
-
         for segment in self.snake:
             x, y = segment
             self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
