@@ -131,14 +131,11 @@ class SnakeGame(QGraphicsView):
             self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
                                  QPen(Qt.black), QBrush(Qt.green))
         fx, fy = self.food
-<<<<<<< HEAD
         self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
         self.scene().addText(f"Score: {self.score}", QFont("Arial", 12))
-=======
         # Food is red
         self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
                              QPen(Qt.black), QBrush(Qt.red))
->>>>>>> f5dc77e6a87d68e17f6505d9c2a0b3e6a312ecbb
 
     def spawn_food(self):
         while True:
