@@ -109,12 +109,15 @@ class SnakeGame(QGraphicsView):
         game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
-        game_over_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
+        text_y = GRID_HEIGHT * CELL_SIZE / 2
+        game_over_text.setPos(text_x, text_y)
 
+        # Add more vertical space between the two texts
         restart_text = self.scene().addText("Press any key to start new game", QFont("Arial", 16))
         restart_width = restart_text.boundingRect().width()
         restart_x = (self.width() - restart_width) / 2
-        restart_text.setPos(restart_x, GRID_HEIGHT * CELL_SIZE / 2 + 10)
+        restart_y = text_y + game_over_text.boundingRect().height() + 16  # 16px extra space
+        restart_text.setPos(restart_x, restart_y)
 
         self.awaiting_restart = True
 
