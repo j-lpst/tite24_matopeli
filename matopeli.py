@@ -67,6 +67,7 @@ class SnakeGame(QGraphicsView):
         # board limits
         if new_head in self.snake or not (0 <= new_head[0] < GRID_WIDTH) or not (0 <= new_head[1] < GRID_HEIGHT):
             self.timer.stop()
+            self.game_over()
             return
 
         self.snake.insert(0, new_head)
@@ -74,11 +75,29 @@ class SnakeGame(QGraphicsView):
 
         self.print_game()
 
+
+    def game_over(self):
+        # Game over text
+        game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
+        text_width = game_over_text.boundingRect().width()
+        text_x = (self.width() - text_width) / 2
+        game_over_text.setPos(text_x, GRID_HEIGHT * CELL_SIZE / 2)
+
     def print_game(self):
         self.scene().clear()
 
         for segment in self.snake:
             x, y = segment
+            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+        fx, fy = self.food
+        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+
+    def spawn_food(self):
+        while True:
+            x = random.randint(0, GRID_WIDTH - 1)
+            y = random.randint(0, GRID_HEIGHT - 1)
+            if (x, y) not in self.snake:
+                return x, y
             self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
                                  QPen(Qt.black), QBrush(Qt.black))
         
@@ -86,6 +105,7 @@ class SnakeGame(QGraphicsView):
         self.direction = Qt.Key_Right
         self.snake = [(5, 5), (5, 6), (5, 7)]
         self.timer.start(300)
+        self.food = self.spawn_food()
 
 def main():
     app = QApplication(sys.argv)
