@@ -100,7 +100,8 @@ class SnakeGame(QGraphicsView):
         # syöminen
         if new_head == self.food:
             self.snake.insert(0, new_head)
-            self.eat_sound.play()  # Syömisääni
+            # Play eat sound
+            self.eat_sound.play()
             self.food = self.spawn_food()
             self.score += 1
             # Speed up the snake a little (minimum delay 60ms)
@@ -155,6 +156,7 @@ class SnakeGame(QGraphicsView):
         self.direction = Qt.Key_Right
         self.snake = [(5, 5), (5, 6), (5, 7)]
         self.food = self.spawn_food()
+        self.score = 0  # Reset score on restart
         # for levels
         self.level_limit = 5
         self.timer_delay = 300
