@@ -36,6 +36,20 @@ class SnakeGame(QGraphicsView):
         self.animations = []  # Säilytetään animaatiot täällä
         self.init_screen()
 
+     # Depressing quotes (text, author)
+        self.quotes = [
+            ("Life is a tale told by an idiot, full of sound and fury, signifying nothing.", "William Shakespeare"),
+            ("We are born crying, live complaining, and die disappointed.", "Thomas Fuller"),
+            ("There is but one truly serious philosophical problem, and that is suicide.", "Albert Camus"),
+            ("Man is condemned to be free.", "Jean-Paul Sartre"),
+            ("All that we see or seem is but a dream within a dream.", "Edgar Allan Poe"),
+            ("To live is to suffer, to survive is to find some meaning in the suffering.", "Friedrich Nietzsche"),
+            ("The only thing we learn from history is that we learn nothing from history.", "Georg Hegel"),
+            ("We are such stuff as dreams are made on, and our little life is rounded with a sleep.", "William Shakespeare"),
+            ("Life has no meaning the moment you lose the illusion of being eternal.", "Jean-Paul Sartre"),
+            ("Everything is meaningless, except the meaning we give it.", "Jean-Paul Sartre")
+        ]
+
     def init_screen(self):
         start_text = self.scene().addText("Press any key to start", QFont("Arial", 18))
         text_width = start_text.boundingRect().width()
@@ -110,32 +124,40 @@ class SnakeGame(QGraphicsView):
         self.print_game()
 
     def game_over(self):
-        # Näytä harmaasävyinen ruutu
         self.print_game()
 
-        # Tekstit
-        game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
+        # Game Over title
+        game_over_text = self.scene().addText("Game Over", QFont("Old English Text MT", 24))
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
         text_y = GRID_HEIGHT * CELL_SIZE / 2
         game_over_text.setPos(text_x, text_y)
 
-        restart_text = self.scene().addText("Press any key to start new game", QFont("Arial", 16))
+        # Masennus quote
+        quote, author = random.choice(self.quotes)
+        quote_text = self.scene().addText(f"\"{quote}\"\n— {author}", QFont("Times New Roman", 10))
+        quote_width = quote_text.boundingRect().width()
+        quote_x = (self.width() - quote_width) / 2
+        quote_y = text_y + game_over_text.boundingRect().height() + 8
+        quote_text.setPos(quote_x, quote_y)
+
+        # Restart teksti
+        restart_text = self.scene().addText("Press any key to start anew", QFont("Times New Roman", 12))
         restart_width = restart_text.boundingRect().width()
         restart_x = (self.width() - restart_width) / 2
-        restart_y = text_y + game_over_text.boundingRect().height() + 16
+        restart_y = quote_y + quote_text.boundingRect().height() + 12
         restart_text.setPos(restart_x, restart_y)
 
-        # Fade-in molemmille teksteille
-        for item in [game_over_text, restart_text]:
+        # Teksti fade in
+        for item in [game_over_text, quote_text, restart_text]:
             opacity_effect = QGraphicsOpacityEffect()
             item.setGraphicsEffect(opacity_effect)
             anim = QPropertyAnimation(opacity_effect, b"opacity")
-            anim.setDuration(5000)
+            anim.setDuration(10000)  # 10s fade
             anim.setStartValue(0)
             anim.setEndValue(1)
             anim.start()
-            self.animations.append(anim)  # säilytä viittaus, ettei animaatio tuhoudu
+            self.animations.append(anim)
 
         self.awaiting_restart = True
 
