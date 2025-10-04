@@ -1,13 +1,14 @@
 import sys
 import random
-from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QMenu
+from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsOpacityEffect
 from PySide6.QtGui import QPainter, QPen, QBrush, QFont
-from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtCore import Qt, QTimer, QUrl, QPropertyAnimation
 from PySide6.QtMultimedia import QSoundEffect
 
 CELL_SIZE = 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 15
+
 
 class SnakeGame(QGraphicsView):
     def __init__(self):
@@ -31,6 +32,8 @@ class SnakeGame(QGraphicsView):
         self.gameover_sound.setVolume(0.5)
 
         self.game_started = False
+        self.is_game_over = False  # Uusi tila
+        self.animations = []  # Säilytetään animaatiot täällä
         self.init_screen()
 
     def init_screen(self):
@@ -42,18 +45,18 @@ class SnakeGame(QGraphicsView):
     def keyPressEvent(self, event):
         key = event.key()
 
-        # If waiting for restart after game over
+        # Uudelleenkäynnistys pelin jälkeen
         if hasattr(self, 'awaiting_restart') and self.awaiting_restart:
-            # Ignore arrow keys for restart
             if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
                 self.awaiting_restart = False
                 self.game_started = True
-                self.gameover_sound.stop()  # Stop the game over sound when restarting
+                self.is_game_over = False
+                self.gameover_sound.stop()
                 self.scene().clear()
                 self.start_game()
             return
 
-        # starting game by button
+        # Käynnistä peli
         if not self.game_started:
             self.game_started = True
             self.scene().clear()
@@ -61,13 +64,7 @@ class SnakeGame(QGraphicsView):
             self.score = 0
             return
 
-        if not self.game_started:
-            self.game_started = True
-            self.scene().clear()
-            self.start_game()
-            return
-        
-
+        # Liikkuminen
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
                 self.direction = key
@@ -90,21 +87,20 @@ class SnakeGame(QGraphicsView):
         elif self.direction == Qt.Key_Down:
             new_head = (head_x, head_y + 1)
 
-        # board limits
+        # Törmäys
         if new_head in self.snake or not (0 <= new_head[0] < GRID_WIDTH) or not (0 <= new_head[1] < GRID_HEIGHT):
             self.timer.stop()
-            self.gameover_sound.play()  # Game Over ääni
+            self.is_game_over = True
+            self.gameover_sound.play()
             self.game_over()
             return
 
-        # syöminen
+        # Syöminen
         if new_head == self.food:
             self.snake.insert(0, new_head)
-            # Play eat sound
             self.eat_sound.play()
             self.food = self.spawn_food()
             self.score += 1
-            # Speed up the snake a little (minimum delay 60ms)
             self.timer_delay = max(60, int(self.timer_delay * 0.93))
             self.timer.start(self.timer_delay)
         else:
@@ -114,18 +110,32 @@ class SnakeGame(QGraphicsView):
         self.print_game()
 
     def game_over(self):
+        # Näytä harmaasävyinen ruutu
+        self.print_game()
+
+        # Tekstit
         game_over_text = self.scene().addText("Game Over", QFont("Arial", 24))
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
         text_y = GRID_HEIGHT * CELL_SIZE / 2
         game_over_text.setPos(text_x, text_y)
 
-        # Add more vertical space between the two texts
         restart_text = self.scene().addText("Press any key to start new game", QFont("Arial", 16))
         restart_width = restart_text.boundingRect().width()
         restart_x = (self.width() - restart_width) / 2
-        restart_y = text_y + game_over_text.boundingRect().height() + 16  # 16px extra space
+        restart_y = text_y + game_over_text.boundingRect().height() + 16
         restart_text.setPos(restart_x, restart_y)
+
+        # Fade-in molemmille teksteille
+        for item in [game_over_text, restart_text]:
+            opacity_effect = QGraphicsOpacityEffect()
+            item.setGraphicsEffect(opacity_effect)
+            anim = QPropertyAnimation(opacity_effect, b"opacity")
+            anim.setDuration(5000)
+            anim.setStartValue(0)
+            anim.setEndValue(1)
+            anim.start()
+            self.animations.append(anim)  # säilytä viittaus, ettei animaatio tuhoudu
 
         self.awaiting_restart = True
 
@@ -133,15 +143,18 @@ class SnakeGame(QGraphicsView):
         self.scene().clear()
         for segment in self.snake:
             x, y = segment
-            # Snake segments are green
-            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
-                                 QPen(Qt.black), QBrush(Qt.green))
+            color = Qt.gray if self.is_game_over else Qt.green
+            self.scene().addRect(
+                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                QPen(Qt.black), QBrush(color)
+            )
         fx, fy = self.food
-        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE, QPen(Qt.black), QBrush(Qt.black))
+        food_color = Qt.black if self.is_game_over else Qt.red
+        self.scene().addRect(
+            fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+            QPen(Qt.black), QBrush(food_color)
+        )
         self.scene().addText(f"Score: {self.score}", QFont("Arial", 12))
-        # Food is red
-        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
-                             QPen(Qt.black), QBrush(Qt.red))
 
     def spawn_food(self):
         while True:
@@ -149,24 +162,25 @@ class SnakeGame(QGraphicsView):
             y = random.randint(0, GRID_HEIGHT - 1)
             if (x, y) not in self.snake:
                 return x, y
-            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
-                                 QPen(Qt.black), QBrush(Qt.black))
-        
+
     def start_game(self):
+        self.is_game_over = False
+        self.animations.clear()
         self.direction = Qt.Key_Right
         self.snake = [(5, 5), (5, 6), (5, 7)]
         self.food = self.spawn_food()
-        self.score = 0  # Reset score on restart
-        # for levels
+        self.score = 0
         self.level_limit = 5
         self.timer_delay = 300
         self.timer.start(self.timer_delay)
+
 
 def main():
     app = QApplication(sys.argv)
     game = SnakeGame()
     game.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()
