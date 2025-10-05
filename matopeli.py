@@ -1,8 +1,8 @@
 import sys
 import random
-from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsOpacityEffect
-from PySide6.QtGui import QPainter, QPen, QBrush, QFont
-from PySide6.QtCore import Qt, QTimer, QUrl, QPropertyAnimation
+from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsOpacityEffect
+from PySide6.QtGui import QPainter, QPen, QBrush, QFont, QColor
+from PySide6.QtCore import Qt, QTimer, QUrl, QPropertyAnimation, QEasingCurve
 from PySide6.QtMultimedia import QSoundEffect
 
 CELL_SIZE = 20
@@ -14,13 +14,15 @@ class SnakeGame(QGraphicsView):
     def __init__(self):
         super().__init__()
 
-        self.setScene(QGraphicsScene(self))
+        scene = QGraphicsScene(self)
+        scene.setBackgroundBrush(QBrush(Qt.white))  # Valkoinen background
+        self.setScene(scene)
         self.setRenderHint(QPainter.Antialiasing)
         self.setSceneRect(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_game)
-        self.timer_delay = 300  # Initial delay in ms
+        self.timer_delay = 300
 
         # Äänet
         self.eat_sound = QSoundEffect()
@@ -32,11 +34,12 @@ class SnakeGame(QGraphicsView):
         self.gameover_sound.setVolume(0.5)
 
         self.game_started = False
-        self.is_game_over = False  # Uusi tila
-        self.animations = []  # Säilytetään animaatiot täällä
+        self.is_game_over = False
+        self.animations = []
+
         self.init_screen()
 
-     # Depressing quotes (text, author)
+        # Masennus :(
         self.quotes = [
             ("Life is a tale told by an idiot, full of sound and fury, signifying nothing.", "William Shakespeare"),
             ("We are born crying, live complaining, and die disappointed.", "Thomas Fuller"),
@@ -47,7 +50,10 @@ class SnakeGame(QGraphicsView):
             ("The only thing we learn from history is that we learn nothing from history.", "Georg Hegel"),
             ("We are such stuff as dreams are made on, and our little life is rounded with a sleep.", "William Shakespeare"),
             ("Life has no meaning the moment you lose the illusion of being eternal.", "Jean-Paul Sartre"),
-            ("Everything is meaningless, except the meaning we give it.", "Jean-Paul Sartre")
+            ("Everything is meaningless, except the meaning we give it.", "Jean-Paul Sartre"),
+            ("We are prisoners of our own minds.", "Blaise Pascal"),
+            ("Man suffers only because he takes seriously what the gods made for fun.", "Alan Watts")
+
         ]
 
     def init_screen(self):
@@ -58,8 +64,6 @@ class SnakeGame(QGraphicsView):
 
     def keyPressEvent(self, event):
         key = event.key()
-
-        # Uudelleenkäynnistys pelin jälkeen
         if hasattr(self, 'awaiting_restart') and self.awaiting_restart:
             if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
                 self.awaiting_restart = False
@@ -70,7 +74,6 @@ class SnakeGame(QGraphicsView):
                 self.start_game()
             return
 
-        # Käynnistä peli
         if not self.game_started:
             self.game_started = True
             self.scene().clear()
@@ -78,7 +81,6 @@ class SnakeGame(QGraphicsView):
             self.score = 0
             return
 
-        # Liikkuminen
         if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
             if key == Qt.Key_Left and self.direction != Qt.Key_Right:
                 self.direction = key
@@ -101,7 +103,6 @@ class SnakeGame(QGraphicsView):
         elif self.direction == Qt.Key_Down:
             new_head = (head_x, head_y + 1)
 
-        # Törmäys
         if new_head in self.snake or not (0 <= new_head[0] < GRID_WIDTH) or not (0 <= new_head[1] < GRID_HEIGHT):
             self.timer.stop()
             self.is_game_over = True
@@ -109,7 +110,6 @@ class SnakeGame(QGraphicsView):
             self.game_over()
             return
 
-        # Syöminen
         if new_head == self.food:
             self.snake.insert(0, new_head)
             self.eat_sound.play()
@@ -126,34 +126,59 @@ class SnakeGame(QGraphicsView):
     def game_over(self):
         self.print_game()
 
-        # Game Over title
+        # Pimeä filteri tekstin ja madon välissä
+        overlay = QGraphicsRectItem(0, 0, CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT)
+        overlay.setBrush(QBrush(QColor(0, 0, 0, 0)))  # start transparent
+        overlay.setPen(Qt.NoPen)
+        overlay.setZValue(5)  # Madon (0) ja tekstin (10) välissä
+        self.scene().addItem(overlay)
+
+        def update_overlay(value):
+            overlay.setBrush(QBrush(QColor(0, 0, 0, int(value))))
+
+        dark_anim = QPropertyAnimation(self, b"dummy")
+        dark_anim.valueChanged.connect(update_overlay)
+        dark_anim.setDuration(10000)
+        dark_anim.setStartValue(0)
+        dark_anim.setEndValue(190)  # Läpinäkyvyys
+        dark_anim.setEasingCurve(QEasingCurve.InOutQuad)
+        dark_anim.start()
+        self.animations.append(dark_anim)
+
+        # Game Over
         game_over_text = self.scene().addText("Game Over", QFont("Old English Text MT", 24))
+        game_over_text.setDefaultTextColor(Qt.white)
+        game_over_text.setZValue(10)
         text_width = game_over_text.boundingRect().width()
         text_x = (self.width() - text_width) / 2
         text_y = GRID_HEIGHT * CELL_SIZE / 2
         game_over_text.setPos(text_x, text_y)
 
-        # Masennus quote
+        # Quote
         quote, author = random.choice(self.quotes)
         quote_text = self.scene().addText(f"\"{quote}\"\n— {author}", QFont("Times New Roman", 10))
+        quote_text.setDefaultTextColor(Qt.white)
+        quote_text.setZValue(10)
         quote_width = quote_text.boundingRect().width()
         quote_x = (self.width() - quote_width) / 2
         quote_y = text_y + game_over_text.boundingRect().height() + 8
         quote_text.setPos(quote_x, quote_y)
 
-        # Restart teksti
+        # Restart
         restart_text = self.scene().addText("Press any key to start anew", QFont("Times New Roman", 12))
+        restart_text.setDefaultTextColor(Qt.white)
+        restart_text.setZValue(10)
         restart_width = restart_text.boundingRect().width()
         restart_x = (self.width() - restart_width) / 2
         restart_y = quote_y + quote_text.boundingRect().height() + 12
         restart_text.setPos(restart_x, restart_y)
 
-        # Teksti fade in
+        # Fade in teksti
         for item in [game_over_text, quote_text, restart_text]:
             opacity_effect = QGraphicsOpacityEffect()
             item.setGraphicsEffect(opacity_effect)
             anim = QPropertyAnimation(opacity_effect, b"opacity")
-            anim.setDuration(10000)  # 10s fade
+            anim.setDuration(10000)
             anim.setStartValue(0)
             anim.setEndValue(1)
             anim.start()
@@ -161,21 +186,18 @@ class SnakeGame(QGraphicsView):
 
         self.awaiting_restart = True
 
+
     def print_game(self):
         self.scene().clear()
         for segment in self.snake:
             x, y = segment
             color = Qt.gray if self.is_game_over else Qt.green
-            self.scene().addRect(
-                x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
-                QPen(Qt.black), QBrush(color)
-            )
+            self.scene().addRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                                 QPen(Qt.black), QBrush(color))
         fx, fy = self.food
         food_color = Qt.black if self.is_game_over else Qt.red
-        self.scene().addRect(
-            fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
-            QPen(Qt.black), QBrush(food_color)
-        )
+        self.scene().addRect(fx * CELL_SIZE, fy * CELL_SIZE, CELL_SIZE, CELL_SIZE,
+                             QPen(Qt.black), QBrush(food_color))
         self.scene().addText(f"Score: {self.score}", QFont("Arial", 12))
 
     def spawn_food(self):
