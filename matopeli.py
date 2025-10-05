@@ -51,7 +51,22 @@ class SnakeGame(QGraphicsView):
             ("Life has no meaning the moment you lose the illusion of being eternal.", "Jean-Paul Sartre"),
             ("Everything is meaningless, except the meaning we give it.", "Jean-Paul Sartre"),
             ("We are prisoners of our own minds.", "Blaise Pascal"),
-            ("Man suffers only because he takes seriously what the gods made for fun.", "Alan Watts")
+            ("Man suffers only because he takes seriously what the gods made for fun.", "Alan Watts"),
+            ("The universe is indifferent to our suffering.", "Carl Sagan"),
+            ("The meaning of life is that it stops.", "Fran Lebowitz"),
+            ("We are born to die, but we spend a lifetime forgetting.", "Unknown"),
+            ("Hope is the worst of evils, for it prolongs the torment of man.", "Friedrich Nietzsche"),
+            ("Everything is ephemeral, even despair.", "Unknown"),
+            ("No one can confidently say that he will still be alive tomorrow.", "Euripides"),
+            ("Everything is fleeting; hold nothing too tightly.", "Buddha"),
+            ("Life is a series of meaningless gestures.", "Jean-Paul Sartre"),
+            ("We live as we dream — alone.", "Joseph Conrad"),
+            ("Life is but a fleeting shadow of a shadow.", "Horace"),
+            ("Life is an error, and death is correction.", "Unknown"),
+            ("To die will be an awfully big adventure.", "J.M. Barrie"),
+            ("The fear of death follows from the fear of life.", "Mark Twain"),
+            ("Man is born free, and everywhere he is in chains.", "Jean-Jacques Rousseau"),
+            ("We are always getting ready to live but never living.", "Ralph Waldo Emerson")
 
         ]
 
@@ -139,13 +154,13 @@ class SnakeGame(QGraphicsView):
         dark_anim.valueChanged.connect(update_overlay)
         dark_anim.setDuration(10000)
         dark_anim.setStartValue(0)
-        dark_anim.setEndValue(190)  # Läpinäkyvyys
+        dark_anim.setEndValue(200)  # Läpinäkyvyys
         dark_anim.setEasingCurve(QEasingCurve.InOutQuad)
         dark_anim.start()
         self.animations.append(dark_anim)
 
         # Game Over
-        game_over_text = self.scene().addText("Game Over", QFont("Old English Text MT", 24))
+        game_over_text = self.scene().addText("Game Over", QFont("Old English Text MT", 30))
         game_over_text.setDefaultTextColor(Qt.white)
         game_over_text.setZValue(10)
         text_width = game_over_text.boundingRect().width()
