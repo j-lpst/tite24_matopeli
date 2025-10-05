@@ -168,9 +168,11 @@ class SnakeGame(QGraphicsView):
         text_y = GRID_HEIGHT * CELL_SIZE / 2
         game_over_text.setPos(text_x, text_y)
 
-        # Quote
+        # Quote and author separately
         quote, author = random.choice(self.quotes)
-        quote_text = self.scene().addText(f"\"{quote}\"\n— {author}", QFont("Times New Roman", 10))
+
+        # Quote text
+        quote_text = self.scene().addText(f"\"{quote}\"", QFont("Times New Roman", 10))
         quote_text.setDefaultTextColor(Qt.white)
         quote_text.setZValue(10)
         quote_width = quote_text.boundingRect().width()
@@ -178,25 +180,70 @@ class SnakeGame(QGraphicsView):
         quote_y = text_y + game_over_text.boundingRect().height() + 8
         quote_text.setPos(quote_x, quote_y)
 
+        # Author text (below quote)
+        author_text = self.scene().addText(f"— {author}", QFont("Times New Roman", 10))
+        author_text.setDefaultTextColor(Qt.white)
+        author_text.setZValue(10)
+        author_width = author_text.boundingRect().width()
+        author_x = (self.width() - quote_width) / 2
+        author_y = quote_y + quote_text.boundingRect().height() - 8
+        author_text.setPos(author_x, author_y)
+
         # Restart
         restart_text = self.scene().addText("Press any key to start anew", QFont("Times New Roman", 12))
         restart_text.setDefaultTextColor(Qt.white)
         restart_text.setZValue(10)
         restart_width = restart_text.boundingRect().width()
         restart_x = (self.width() - restart_width) / 2
-        restart_y = quote_y + quote_text.boundingRect().height() + 12
+        restart_y = author_y + author_text.boundingRect().height() + 12
         restart_text.setPos(restart_x, restart_y)
 
-        # Fade in teksti
-        for item in [game_over_text, quote_text, restart_text]:
-            opacity_effect = QGraphicsOpacityEffect()
-            item.setGraphicsEffect(opacity_effect)
-            anim = QPropertyAnimation(opacity_effect, b"opacity")
-            anim.setDuration(10000)
-            anim.setStartValue(0)
-            anim.setEndValue(1)
-            anim.start()
-            self.animations.append(anim)
+        # Fade-in animations
+        # Game over fades in normally
+        go_opacity = QGraphicsOpacityEffect()
+        game_over_text.setGraphicsEffect(go_opacity)
+        go_anim = QPropertyAnimation(go_opacity, b"opacity")
+        go_anim.setDuration(10000)
+        go_anim.setStartValue(0)
+        go_anim.setEndValue(1)
+        go_anim.start()
+        self.animations.append(go_anim)
+
+        # Quote fades in
+        quote_opacity = QGraphicsOpacityEffect()
+        quote_text.setGraphicsEffect(quote_opacity)
+        quote_anim = QPropertyAnimation(quote_opacity, b"opacity")
+        quote_anim.setDuration(10000)
+        quote_anim.setStartValue(0)
+        quote_anim.setEndValue(1)
+        quote_anim.start()
+        self.animations.append(quote_anim)
+
+        # Author fades in later using QTimer single-shot delay
+        author_opacity = QGraphicsOpacityEffect()
+        author_text.setGraphicsEffect(author_opacity)
+        author_opacity.setOpacity(0)  # start invisible
+        author_anim = QPropertyAnimation(author_opacity, b"opacity")
+        author_anim.setDuration(2000)
+        author_anim.setStartValue(0)
+        author_anim.setEndValue(1)
+        author_anim.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animations.append(author_anim)
+
+        QTimer.singleShot(12000, author_anim.start)  # 12 s
+
+        # Restart fades in normally
+        restart_opacity = QGraphicsOpacityEffect()
+        restart_text.setGraphicsEffect(restart_opacity)
+        restart_opacity.setOpacity(0)  # start invisible
+        restart_anim = QPropertyAnimation(restart_opacity, b"opacity")
+        restart_anim.setDuration(3000)
+        restart_anim.setStartValue(0)
+        restart_anim.setEndValue(1)
+        restart_anim.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animations.append(restart_anim)
+
+        QTimer.singleShot(14000, restart_anim.start)  # 12 s
 
         self.awaiting_restart = True
 
