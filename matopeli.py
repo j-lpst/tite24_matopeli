@@ -48,7 +48,6 @@ class SnakeGame(QGraphicsView):
             ("All that we see or seem is but a dream within a dream.", "Edgar Allan Poe"),
             ("To live is to suffer, to survive is to find some meaning in the suffering.", "Friedrich Nietzsche"),
             ("The only thing we learn from history is that we learn nothing from history.", "Georg Hegel"),
-            ("We are such stuff as dreams are made on, and our little life is rounded with a sleep.", "William Shakespeare"),
             ("Life has no meaning the moment you lose the illusion of being eternal.", "Jean-Paul Sartre"),
             ("Everything is meaningless, except the meaning we give it.", "Jean-Paul Sartre"),
             ("We are prisoners of our own minds.", "Blaise Pascal"),
